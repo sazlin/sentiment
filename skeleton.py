@@ -1,89 +1,65 @@
 import os
-from collections import OrderedDict
 import numpy as np
-from operator import itemgetter as ig
 from sklearn.linear_model import LogisticRegression as LR
+from sklearn.feature_extraction.text import CountVectorizer as CV
 
-#vocab = [] #the features used in the classifier
-vocab_list = []
-stopwords_list = set([])
-#build vocabulary
+
 def build_vocab(n=100):
-    vocab_dict = {}
-    #global stopwords_list
-    stopwords_list = set(open('stopwords.txt').read().lower().split())
-    _populate_vocab_dict(
-        vocab_dict,
-        stopwords_list,
-        os.listdir(os.getcwd() + "/pos"),
-        "pos")
-    _populate_vocab_dict(
-        vocab_dict,
-        stopwords_list,
-        os.listdir(os.getcwd() + "/neg"),
-        "neg")
-    vocab_list = OrderedDict(sorted(vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
-    return vocab_list
+    stopwords = open('stopwords.txt').read().lower().split()
+    pos_file_list = os.listdir(os.getcwd() + "/pos")
+    neg_file_list = os.listdir(os.getcwd() + "/neg")
+    labels_list = []
+    [labels_list.append(1) for file in pos_file_list]
+    [labels_list.append(0) for file in neg_file_list]
+    file_list = \
+        [os.getcwd() + '/pos/' + filename for filename in pos_file_list] +\
+        [os.getcwd() + '/neg/' + filename for filename in neg_file_list]
+
+    vec = CV(input='filename',
+        analyzer='word',
+        stop_words=stopwords,
+        max_features=n)
+    print "Building X, Y..."
+    X = vec.fit_transform(file_list).toarray()
+    Y = np.array(labels_list)
+    print "Done"
+    return X, Y, vec.get_feature_names()
 
 
-def _populate_vocab_dict(d, stopwords, filenames, folder):
-    for filename in filenames:
-        print "Filename: ", filename
-        with open(os.getcwd() + "/" + folder + "/" + filename) as f:
-            words = f.read().lower().split()
-            for word in words:
-                if word not in stopwords:
-                    if word in d:
-                        d[word] += 1
-                    else:
-                        d[word] = 1
-    ###TODO: Populate vocab list with N most frequent words in training data, minus stopwords
-
-
-def vectorize(fn):
-    global vocab
-    vector = np.zeros(len(vocab))
-    
-    ###TODO: Create vector representation of 
-
-    return vector
-
-def make_classifier():
-   
-    #TODO: Build X matrix of vector representations of review files, and y vector of labels
-
-    lr = LR()
-    lr.fit(X,y)
-
-    return lr
-
-def test_classifier(lr):
-    global vocab
-    test = np.zeros((len(os.listdir('test')),len(vocab)))
-    testfn = []
+def test_classifier(lr, vocab):
+    test_vec = CV(input='filename',
+                         analyzer='word',
+                         vocabulary=vocab)
+    test_file_list = \
+        [os.getcwd() + '/test/' + filename for filename in os.listdir(os.getcwd() + "/test")]
+    print "Fitting transform..."
+    test_matrix = test_vec.fit_transform(test_file_list, vocab).toarray()
+    print "Done"
+    # test_matrix = np.zeros((len(os.listdir('test')),len(vocab)))
+    # test_file_names = []
     i = 0
-    y = []
-    for fn in os.listdir('test'):
-        testfn.append(fn)
-        test[i] = vectorize(os.path.join('test',fn))
-        ind = int(fn.split('_')[0][-1])
-        y.append(1 if ind == 3 else -1)
+    test_file_known_sentiment = []
+    for filename in test_file_list:
+        indicator = int(filename.split('_')[0][-1])
+        test_file_known_sentiment.append(1 if indicator == 3 else -1)
         i += 1
 
-    assert(sum(y)==0)
-    p = lr.predict(test)
+    assert sum(test_file_known_sentiment) == 0
+    predications = lr.predict(test_matrix)
 
-    r,w = 0,0
-    for i,x in enumerate(p):
-        if x == y[i]:
-            r += 1
+    correct, wrong = 0, 0
+    for i, predicated_sentiment in enumerate(predications):
+        if predicated_sentiment == test_file_known_sentiment[i]:
+            correct += 1
         else:
-            w +=1
-            print(testfn[i])
-    print(r,w)
+            wrong += 1
+            print test_file_list[i]
+    print correct, wrong
 
 
-if __name__=='__main__':
-    build_vocab()
-    lr = make_classifier()
-    test_classifier(lr)
+if __name__ == '__main__':
+    x, y, vocab = build_vocab(10000)
+    print "Vocab: ", vocab
+    lr = LR()
+    lr.fit(x, y)  # Setup classifier wth our matrix (x) and labels (y)
+    test_classifier(lr, vocab)
