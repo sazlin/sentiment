@@ -1,15 +1,43 @@
-import sys, os
+import os
+from collections import OrderedDict
 import numpy as np
 from operator import itemgetter as ig
 from sklearn.linear_model import LogisticRegression as LR
 
-vocab = [] #the features used in the classifier
-
+#vocab = [] #the features used in the classifier
+pos_vocab = []
+neg_vocab = []
 #build vocabulary
-def buildvocab():
-    global vocab
-    stopwords = open('stopwords.txt').read().lower().split()
+def build_vocab(n=100):
+    pos_vocab_dict = {}
+    neg_vocab_dict = {}
+    stopwords = set(open('stopwords.txt').read().lower().split())
+    _populate_vocab_dict(
+        pos_vocab_dict,
+        stopwords,
+        os.listdir(os.getcwd() + "/pos"),
+        "pos")
+    _populate_vocab_dict(
+        neg_vocab_dict,
+        stopwords,
+        os.listdir(os.getcwd() + "/neg"),
+        "neg")
+    pos_vocab = OrderedDict(sorted(pos_vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
+    neg_vocab = OrderedDict(sorted(neg_vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
+    return pos_vocab, neg_vocab
 
+
+def _populate_vocab_dict(d, stopwords, filenames, folder):
+    for filename in filenames:
+        print "Filename: ", filename
+        with open(os.getcwd() + "/" + folder + "/" + filename) as f:
+            words = f.read().lower().split()
+            for word in words:
+                if word not in stopwords:
+                    if word in d:
+                        d[word] += 1
+                    else:
+                        d[word] = 1
     ###TODO: Populate vocab list with N most frequent words in training data, minus stopwords
 
 
@@ -57,6 +85,6 @@ def test_classifier(lr):
 
 
 if __name__=='__main__':
-    buildvocab()
+    build_vocab()
     lr = make_classifier()
     test_classifier(lr)
