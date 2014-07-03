@@ -10,11 +10,11 @@ jackie chan is the barry sanders of moviemaking . """
 
 def test_populate_vocab_dict():
     test_stopwords = set(['teststop', 'dollar'])
-    f = open('test_file', 'w')
+    f = open('./test_files/test_file', 'w')
     f.write(test_pos_text)
     f.close()
     test_d = {}
-    _populate_vocab_dict(test_d, test_stopwords, [os.getcwd()+'/test_file'])
+    _populate_vocab_dict(test_d, test_stopwords, ['test_file'], 'test_files')
     assert "moviemaking" in test_d
     assert test_d["moviemaking"] == 2
     assert "dollar" not in test_d

@@ -5,26 +5,25 @@ from operator import itemgetter as ig
 from sklearn.linear_model import LogisticRegression as LR
 
 #vocab = [] #the features used in the classifier
-pos_vocab = []
-neg_vocab = []
+vocab_list = []
+stopwords_list = set([])
 #build vocabulary
 def build_vocab(n=100):
-    pos_vocab_dict = {}
-    neg_vocab_dict = {}
-    stopwords = set(open('stopwords.txt').read().lower().split())
+    vocab_dict = {}
+    #global stopwords_list
+    stopwords_list = set(open('stopwords.txt').read().lower().split())
     _populate_vocab_dict(
-        pos_vocab_dict,
-        stopwords,
+        vocab_dict,
+        stopwords_list,
         os.listdir(os.getcwd() + "/pos"),
         "pos")
     _populate_vocab_dict(
-        neg_vocab_dict,
-        stopwords,
+        vocab_dict,
+        stopwords_list,
         os.listdir(os.getcwd() + "/neg"),
         "neg")
-    pos_vocab = OrderedDict(sorted(pos_vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
-    neg_vocab = OrderedDict(sorted(neg_vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
-    return pos_vocab, neg_vocab
+    vocab_list = OrderedDict(sorted(vocab_dict.iteritems(), key=ig(1))[-n:]).keys()
+    return vocab_list
 
 
 def _populate_vocab_dict(d, stopwords, filenames, folder):
