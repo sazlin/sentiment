@@ -10,7 +10,7 @@ def build_vocab(n=100):
     neg_file_list = os.listdir(os.getcwd() + "/neg")
     labels_list = []
     [labels_list.append(1) for file in pos_file_list]
-    [labels_list.append(0) for file in neg_file_list]
+    [labels_list.append(-1) for file in neg_file_list]
     file_list = \
         [os.getcwd() + '/pos/' + filename for filename in pos_file_list] +\
         [os.getcwd() + '/neg/' + filename for filename in neg_file_list]
@@ -35,8 +35,6 @@ def test_classifier(lr, vocab):
     print "Fitting transform..."
     test_matrix = test_vec.fit_transform(test_file_list, vocab).toarray()
     print "Done"
-    # test_matrix = np.zeros((len(os.listdir('test')),len(vocab)))
-    # test_file_names = []
     i = 0
     test_file_known_sentiment = []
     for filename in test_file_list:
