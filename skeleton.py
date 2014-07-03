@@ -26,7 +26,7 @@ def build_vocab(n=100):
     return X, Y, vec.get_feature_names()
 
 
-def test_classifier(lr, vocab):
+def run_classifier(lr, vocab):
     test_vec = CV(input='filename',
                          analyzer='word',
                          vocabulary=vocab)
@@ -53,6 +53,7 @@ def test_classifier(lr, vocab):
             wrong += 1
             print test_file_list[i]
     print correct, wrong
+    return correct / (float(correct) + wrong)
 
 
 if __name__ == '__main__':
@@ -60,4 +61,4 @@ if __name__ == '__main__':
     print "Vocab: ", vocab
     lr = LR()
     lr.fit(x, y)  # Setup classifier wth our matrix (x) and labels (y)
-    test_classifier(lr, vocab)
+    run_classifier(lr, vocab)
