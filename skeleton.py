@@ -5,6 +5,8 @@ from sklearn.naive_bayes import BernoulliNB as BNB
 from sklearn.naive_bayes import MultinomialNB as MNB
 from sklearn.svm import LinearSVC as SVM
 from sklearn.feature_extraction.text import CountVectorizer as CV
+from sklearn.cross_validation import cross_val_score
+
 
 def assemble_inputs():
     stopwords = open('stopwords.txt').read().lower().split()
@@ -30,6 +32,31 @@ def build_word_matrix(n=100):
     Y = np.array(labels_list)
     print "Done"
     return matrix, Y, vec.get_feature_names()
+
+
+def fit_classifiers(matrix, y):
+    #fit Logistic Regression classifier to training data
+    lr = LR()
+    lr.fit(matrix, y)
+    print "LR cross val: ", cross_val_score(lr, matrix, y, cv=6)
+
+    #fit Bernoulli Naive Bayes classifier to training data
+    nb = BNB()
+    nb.fit(matrix, y)
+    print "BNB cross val: ", cross_val_score(nb, matrix, y, cv=6)
+
+    #fit Support Vector Machine classifier to training data
+    svm = SVM()
+    svm.fit(matrix, y)
+    print "SVM cross val: ", cross_val_score(svm, matrix, y, cv=6)
+
+    #fit Multinomial Naive Bayes classifier to training data
+    mnb = MNB()
+    mnb.fit(matrix, y)
+    print "MNB cross val: ", cross_val_score(mnb, matrix, y, cv=6)
+
+    return lr, nb, svm, mnb
+
 
 
 def build_test_matrix(vocab):
@@ -66,18 +93,14 @@ def run_classifier(classifier, vocab):
 
 if __name__ == '__main__':
     matrix, y, vocab = build_word_matrix(1000)
-    ### compares three different methods: Logistic Regression, Naive Bayes,
-    ### and Support Vector Machine
-    lr = LR()
-    lr.fit(matrix, y)  # Setup classifier wth our matrix (x) and labels (y)
+
+    print "finished the long bit"
+
+  # Setup classifiers wth our matrix (x) and labels (y)
+    lr, nb, svm, mnb = fit_classifiers(matrix, y)
+
     print "LR: ", run_classifier(lr, vocab)
-    nb = BNB()
-    nb.fit(matrix, y)
     print "NB: ", run_classifier(nb, vocab)
-    svm = SVM()
-    svm.fit(matrix, y)
     print "SVM: ", run_classifier(svm, vocab)
-    mnb = MNB()
-    mnb.fit(matrix, y)
     print "MNB: ", run_classifier(mnb, vocab)
 
